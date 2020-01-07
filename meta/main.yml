@@ -1,0 +1,17 @@
+galaxy_info:
+  role_name: synowebapi
+  author: imax
+  description: >
+    Adds modules for invoking Synology API via `synowebapi` executable.
+  license: MIT
+  min_ansible_version: 2.9
+
+  platforms:
+  - name: Synology
+    versions:
+    - all
+
+  galaxy_tags:
+  - synowebapi
+
+dependencies: []  
