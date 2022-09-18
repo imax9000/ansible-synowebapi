@@ -38,6 +38,8 @@ options:
 				description: Port number. Defaults to 80 or 443.
 			https:
 				description: Whether to use https.
+	customize_headers:
+		description: Customize headers param.
 '''
 
 EXAMPLES = r'''
@@ -50,6 +52,11 @@ EXAMPLES = r'''
     frontend:
       fqdn: "dsm.my.local.network"
       https: yes
+    customize_headers:
+      - name: "Upgrade"
+        value: "$http_upgrade"
+      - name: "Connection"
+        value: "$connection_upgrade"
 '''
 
 from ansible.module_utils.api import SynoAPIModule
@@ -61,6 +68,9 @@ def lookup(d, path):
 		d = d.get(name)
 	return d
 
+def list_different(list1: list, list2: list):
+    diff = [i for i in list1 + list2 if i not in list1 or i not in list2]
+    return len(diff) != 0
 
 def run_module():
     module_args = dict(
@@ -74,6 +84,10 @@ def run_module():
     		fqdn=dict(type='str', required=True),
     		port=dict(type='int', required=False),
     		https=dict(type='bool', default=False),
+		)),
+    	customize_headers=dict(type='list', element='dict', options=dict(
+    		name=dict(type='string', required=True),
+    		value=dict(type='string', required=True),
 		)),
     )
     result = dict(changed=False, diff=dict(before=dict(), after=dict()))
@@ -95,6 +109,9 @@ def run_module():
     if configured_entry['frontend']['port'] is None:
     	https = module.params['frontend']['https']
     	configured_entry['frontend']['port'] = 443 if https else 80
+
+    if module.params.get('customize_headers', None):
+    	configured_entry['customize_headers']=module.params['customize_headers']
 
     _, existing_data = module.syno_web_api('SYNO.Core.AppPortal.ReverseProxy',
     									   'list')
@@ -132,6 +149,9 @@ def run_module():
     	if lookup(existing_entry, field) != lookup(configured_entry, field):
     		result['changed'] = True
 
+    if list_different(lookup(configured_entry, 'customize_headers'), lookup(existing_entry, 'customize_headers')):
+	    result['changed'] = True
+
     if module.check_mode:
     	module.exit_json(**result)
 
@@ -140,7 +160,6 @@ def run_module():
     	method, dict(entry=configured_entry))
 
     module.exit_json(**result)
-
 
 def main():
     run_module()
