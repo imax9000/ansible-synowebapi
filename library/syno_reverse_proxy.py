@@ -69,6 +69,8 @@ def lookup(d, path):
 	return d
 
 def list_different(list1: list, list2: list):
+    list1 = list1 or []
+    list2 = list2 or []
     diff = [i for i in list1 + list2 if i not in list1 or i not in list2]
     return len(diff) != 0
 
@@ -85,7 +87,7 @@ def run_module():
     		port=dict(type='int', required=False),
     		https=dict(type='bool', default=False),
 		)),
-    	customize_headers=dict(type='list', element='dict', options=dict(
+    	customize_headers=dict(type='list', element='dict', default=[], options=dict(
     		name=dict(type='string', required=True),
     		value=dict(type='string', required=True),
 		)),
